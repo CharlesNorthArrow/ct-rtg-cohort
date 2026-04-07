@@ -1,9 +1,8 @@
 'use client';
 
+import React from 'react';
 import { LayerMode, Trajectory, TRAJECTORY_CONFIG, KEI_STOPS, ELA_STOPS } from '@/lib/types';
 
-// Spotlight grid order: positive outcomes top row, concerning bottom row
-const SPOTLIGHT_ORDER: Trajectory[] = ['stayed_high', 'improved', 'declined', 'stayed_low'];
 
 interface Props {
   activeLayer: LayerMode;
@@ -73,57 +72,88 @@ export default function Legend({ activeLayer, spotlightCategory, onSpotlightChan
             KEI 2020–21 → ELA 2024–25
           </p>
 
-          {/* 2×2 spotlight grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, marginBottom: 8 }}>
-            {SPOTLIGHT_ORDER.map((key) => {
-              const cfg = TRAJECTORY_CONFIG[key];
-              const isActive = spotlightCategory === key;
-              const isDimmed = spotlightCategory !== null && !isActive;
-              return (
-                <button
-                  key={key}
-                  onClick={() => onSpotlightChange(isActive ? null : key)}
-                  title={isActive ? 'Click to clear filter' : `Show only: ${cfg.label}`}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 4,
-                    padding: '7px 4px 6px',
-                    borderRadius: 8,
-                    border: `2px solid ${isActive ? cfg.color : 'transparent'}`,
-                    background: isActive ? `${cfg.color}1a` : '#f4f4f4',
-                    opacity: isDimmed ? 0.38 : 1,
-                    cursor: 'pointer',
-                    transition: 'opacity 0.15s, border-color 0.15s',
-                  }}
+          {/* Diamond spotlight layout: stayed_high top, improved left, declined right, stayed_low bottom */}
+          {(() => {
+            const DIAMOND: Array<{ key: Trajectory; pos: React.CSSProperties }> = [
+              { key: 'stayed_high', pos: { top: 0,   left: '50%', transform: 'translateX(-50%)' } },
+              { key: 'improved',   pos: { top: '50%', left: 0,    transform: 'translateY(-50%)' } },
+              { key: 'declined',   pos: { top: '50%', right: 0,   transform: 'translateY(-50%)' } },
+              { key: 'stayed_low', pos: { bottom: 0, left: '50%', transform: 'translateX(-50%)' } },
+            ];
+            const BTN_W = 62;
+            const BTN_H = 54;
+            return (
+              <div style={{ position: 'relative', height: 148, marginBottom: 8 }}>
+                {/* Diamond connector lines */}
+                <svg
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+                  viewBox="0 0 180 148"
+                  preserveAspectRatio="none"
                 >
-                  <span
-                    style={{
-                      display: 'block',
-                      width: 22,
-                      height: 22,
-                      borderRadius: 4,
-                      background: cfg.color,
-                      boxShadow: isActive ? `0 0 0 2px ${cfg.color}55` : 'none',
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 600,
-                      textAlign: 'center',
-                      color: '#1a3a2a',
-                      lineHeight: 1.25,
-                      fontFamily: 'var(--font-nunito)',
-                    }}
-                  >
-                    {cfg.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                  {/* top-left, top-right, bottom-left, bottom-right diagonals */}
+                  <line x1="90" y1="27" x2="31"  y2="74" stroke="#ddd" strokeWidth="1.5" />
+                  <line x1="90" y1="27" x2="149" y2="74" stroke="#ddd" strokeWidth="1.5" />
+                  <line x1="31"  y1="74" x2="90" y2="121" stroke="#ddd" strokeWidth="1.5" />
+                  <line x1="149" y1="74" x2="90" y2="121" stroke="#ddd" strokeWidth="1.5" />
+                </svg>
+
+                {DIAMOND.map(({ key, pos }) => {
+                  const cfg = TRAJECTORY_CONFIG[key];
+                  const isActive = spotlightCategory === key;
+                  const isDimmed = spotlightCategory !== null && !isActive;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => onSpotlightChange(isActive ? null : key)}
+                      title={isActive ? 'Click to clear filter' : `Show only: ${cfg.label}`}
+                      style={{
+                        position: 'absolute',
+                        ...pos,
+                        width: BTN_W,
+                        height: BTN_H,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 3,
+                        borderRadius: 8,
+                        border: `2px solid ${isActive ? cfg.color : 'transparent'}`,
+                        background: isActive ? `${cfg.color}1a` : '#f4f4f4',
+                        opacity: isDimmed ? 0.35 : 1,
+                        cursor: 'pointer',
+                        transition: 'opacity 0.15s, border-color 0.15s',
+                        padding: '5px 4px',
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: 'block',
+                          width: 20,
+                          height: 20,
+                          borderRadius: 4,
+                          background: cfg.color,
+                          flexShrink: 0,
+                          boxShadow: isActive ? `0 0 0 2px ${cfg.color}55` : 'none',
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: 8.5,
+                          fontWeight: 600,
+                          textAlign: 'center',
+                          color: '#1a3a2a',
+                          lineHeight: 1.2,
+                          fontFamily: 'var(--font-nunito)',
+                        }}
+                      >
+                        {cfg.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* No-data swatch */}
           <div className="flex items-center gap-2" style={{ opacity: spotlightCategory ? 0.4 : 1 }}>

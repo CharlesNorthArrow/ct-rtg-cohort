@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: "Reading Ready? — RTG Cohort Map",
   description:
     "Tracking Connecticut's youngest learners from Kindergarten Entry (2020–21) through 3rd Grade ELA (2024–25).",
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
