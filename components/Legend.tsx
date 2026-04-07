@@ -94,13 +94,13 @@ export default function Legend({ activeLayer, spotlightCategory, onSpotlightChan
                 key: 'improved',
                 points: '78,68 46,100 78,132 110,100',
                 labelLines: ['Beat the', 'Odds'],
-                lx: 42, ly: 95, anchor: 'end',
+                lx: 42, ly: 93, anchor: 'end',
               },
               {
                 key: 'declined',
                 points: '142,68 174,100 142,132 110,100',
                 labelLines: ['Fell', 'Behind'],
-                lx: 178, ly: 95, anchor: 'start',
+                lx: 178, ly: 93, anchor: 'start',
               },
               {
                 key: 'stayed_low',
@@ -144,7 +144,7 @@ export default function Legend({ activeLayer, spotlightCategory, onSpotlightChan
                         x={lx}
                         y={ly}
                         textAnchor={anchor as React.SVGAttributes<SVGTextElement>['textAnchor']}
-                        fontSize="8"
+                        fontSize="12"
                         fontWeight="600"
                         fill="#1a3a2a"
                         fontFamily="var(--font-nunito)"
@@ -152,7 +152,7 @@ export default function Legend({ activeLayer, spotlightCategory, onSpotlightChan
                         style={{ transition: 'opacity 0.15s' }}
                       >
                         {labelLines.map((line, i) => (
-                          <tspan key={i} x={lx} dy={i === 0 ? 0 : 11}>{line}</tspan>
+                          <tspan key={i} x={lx} dy={i === 0 ? 0 : 14}>{line}</tspan>
                         ))}
                       </text>
                     </g>
