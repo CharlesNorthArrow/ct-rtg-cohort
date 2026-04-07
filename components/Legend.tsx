@@ -1,86 +1,21 @@
 'use client';
 
-import { LayerMode, BIVARIATE_COLORS, KEI_STOPS, ELA_STOPS } from '@/lib/types';
+import { LayerMode, Trajectory, TRAJECTORY_CONFIG, KEI_STOPS, ELA_STOPS } from '@/lib/types';
 
-// Diamond bivariate legend
-// Layout: col = kei_q - 1 (0–3, left→right = more need), row = 4 - ela_q (0–3, top→bottom = worse ELA)
-// TOP corner = stayed_high (kei=1, ela=4), BOTTOM = stayed_low, LEFT = declined, RIGHT = improved
-const CELL = 10;
-const CX = 100;
-const CY = 80;
-
-function BivariateDiamond() {
-  const cells = ([1, 2, 3, 4] as number[]).flatMap(kei =>
-    ([1, 2, 3, 4] as number[]).map(ela => {
-      const col = kei - 1;
-      const row = 4 - ela;
-      const cx = CX + (col - row) * CELL;
-      const cy = CY + (col + row - 3) * CELL;
-      const color = BIVARIATE_COLORS[`${kei}_${ela}`] || '#e0e0e0';
-      return (
-        <polygon
-          key={`${kei}_${ela}`}
-          points={`${cx},${cy - CELL} ${cx + CELL},${cy} ${cx},${cy + CELL} ${cx - CELL},${cy}`}
-          fill={color}
-          stroke="white"
-          strokeWidth={0.5}
-        />
-      );
-    })
-  );
-
-  return (
-    <svg width={200} height={158} style={{ display: 'block' }}>
-      <defs>
-        <marker id="bv-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#888" />
-        </marker>
-      </defs>
-
-      {cells}
-
-      {/* Axis arrows along outer NW and NE edges, offset 12 px outward */}
-      {/* NW = ELA axis: LEFT tip (60,80) → TOP tip (100,40), outward normal (-0.707,-0.707) */}
-      <line x1={52} y1={72} x2={92} y2={32} stroke="#888" strokeWidth={1} markerEnd="url(#bv-arrow)" />
-      {/* NE = KEI axis: TOP tip (100,40) → RIGHT tip (140,80), outward normal (+0.707,-0.707) */}
-      <line x1={109} y1={32} x2={149} y2={72} stroke="#888" strokeWidth={1} markerEnd="url(#bv-arrow)" />
-
-      {/* Axis labels rotated along edges */}
-      <text x={72} y={52} textAnchor="middle" fontSize={7} fill="#666"
-        fontFamily="var(--font-nunito)" transform="rotate(-45 72 52)">
-        Better ELA
-      </text>
-      <text x={129} y={52} textAnchor="middle" fontSize={7} fill="#666"
-        fontFamily="var(--font-nunito)" transform="rotate(45 129 52)">
-        KEI need
-      </text>
-
-      {/* Corner category labels */}
-      <text x={CX} y={27} textAnchor="middle" fontSize={8} fontWeight="600"
-        fill="#1a3a2a" fontFamily="var(--font-nunito)">Stayed High</text>
-      <text x={CX} y={138} textAnchor="middle" fontSize={8}
-        fill="#1a3a2a" fontFamily="var(--font-nunito)">Stayed Low</text>
-      <text x={53} y={83} textAnchor="end" fontSize={8}
-        fill="#555" fontFamily="var(--font-nunito)">Declined</text>
-      <text x={148} y={83} textAnchor="start" fontSize={8}
-        fill="#555" fontFamily="var(--font-nunito)">Improved</text>
-
-      {/* No-data row */}
-      <rect x={CX - 6} y={147} width={12} height={7} fill="#e0e0e0" stroke="#ccc" strokeWidth={0.5} rx={1} />
-      <text x={CX + 9} y={154} fontSize={7} fill="#888" fontFamily="var(--font-nunito)">No data</text>
-    </svg>
-  );
-}
+// Spotlight grid order: positive outcomes top row, concerning bottom row
+const SPOTLIGHT_ORDER: Trajectory[] = ['stayed_high', 'improved', 'declined', 'stayed_low'];
 
 interface Props {
   activeLayer: LayerMode;
+  spotlightCategory: Trajectory | null;
+  onSpotlightChange: (cat: Trajectory | null) => void;
 }
 
-export default function Legend({ activeLayer }: Props) {
+export default function Legend({ activeLayer, spotlightCategory, onSpotlightChange }: Props) {
   return (
     <div
       className="absolute bottom-8 left-3 z-10 rounded-xl shadow-lg p-3 text-xs"
-      style={{ background: 'rgba(255,255,255,0.95)', minWidth: 180, maxWidth: 232 }}
+      style={{ background: 'rgba(255,255,255,0.95)', minWidth: 180, maxWidth: 220 }}
     >
       {activeLayer === 'kei' && (
         <>
@@ -130,13 +65,93 @@ export default function Legend({ activeLayer }: Props) {
 
       {activeLayer === 'trajectory' && (
         <>
-          <p className="font-bold mb-1" style={{ fontFamily: 'var(--font-nunito)', color: '#1a3a2a' }}>
+          <p className="font-bold mb-1.5" style={{ fontFamily: 'var(--font-nunito)', color: '#1a3a2a' }}>
             Cohort Trajectory
           </p>
           <p className="mb-2" style={{ color: '#5a7a6a' }}>
             KEI 2020–21 → ELA 2024–25
           </p>
-          <BivariateDiamond />
+
+          {/* 2×2 spotlight grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, marginBottom: 8 }}>
+            {SPOTLIGHT_ORDER.map((key) => {
+              const cfg = TRAJECTORY_CONFIG[key];
+              const isActive = spotlightCategory === key;
+              const isDimmed = spotlightCategory !== null && !isActive;
+              return (
+                <button
+                  key={key}
+                  onClick={() => onSpotlightChange(isActive ? null : key)}
+                  title={isActive ? 'Click to clear filter' : `Show only: ${cfg.label}`}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '7px 4px 6px',
+                    borderRadius: 8,
+                    border: `2px solid ${isActive ? cfg.color : 'transparent'}`,
+                    background: isActive ? `${cfg.color}1a` : '#f4f4f4',
+                    opacity: isDimmed ? 0.38 : 1,
+                    cursor: 'pointer',
+                    transition: 'opacity 0.15s, border-color 0.15s',
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'block',
+                      width: 22,
+                      height: 22,
+                      borderRadius: 4,
+                      background: cfg.color,
+                      boxShadow: isActive ? `0 0 0 2px ${cfg.color}55` : 'none',
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 600,
+                      textAlign: 'center',
+                      color: '#1a3a2a',
+                      lineHeight: 1.25,
+                      fontFamily: 'var(--font-nunito)',
+                    }}
+                  >
+                    {cfg.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* No-data swatch */}
+          <div className="flex items-center gap-2" style={{ opacity: spotlightCategory ? 0.4 : 1 }}>
+            <span
+              className="inline-block flex-shrink-0 rounded-sm"
+              style={{ width: 14, height: 14, background: TRAJECTORY_CONFIG.no_data.color }}
+            />
+            <span style={{ color: '#888' }}>{TRAJECTORY_CONFIG.no_data.label}</span>
+          </div>
+
+          {spotlightCategory && (
+            <button
+              onClick={() => onSpotlightChange(null)}
+              style={{
+                marginTop: 8,
+                width: '100%',
+                fontSize: 9,
+                color: '#555',
+                background: 'none',
+                border: '1px solid #ccc',
+                borderRadius: 5,
+                padding: '3px 0',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-nunito)',
+              }}
+            >
+              Clear filter
+            </button>
+          )}
         </>
       )}
     </div>

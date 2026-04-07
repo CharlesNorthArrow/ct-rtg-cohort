@@ -1,13 +1,13 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { LayerMode, DistrictProperties, BIVARIATE_COLORS, KEI_STOPS, ELA_STOPS } from '@/lib/types';
-import Legend from './Legend';
+import { LayerMode, Trajectory, DistrictProperties, TRAJECTORY_CONFIG, KEI_STOPS, ELA_STOPS } from '@/lib/types';
 
 interface Props {
   activeLayer: LayerMode;
   onDistrictClick: (props: DistrictProperties | null) => void;
   selectedDistrict: string | null;
+  spotlightCategory: Trajectory | null;
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
@@ -44,42 +44,50 @@ function elaColorExpr() {
   ];
 }
 
-function trajColorExpr() {
-  const key = ['concat',
-    ['to-string', ['get', 'kei_quartile']],
-    '_',
-    ['to-string', ['get', 'ela_quartile']],
+function trajColorExpr(spotlight: Trajectory | null) {
+  if (spotlight) {
+    return ['case',
+      ['==', ['get', 'trajectory'], spotlight], TRAJECTORY_CONFIG[spotlight].color,
+      '#DEDEDE',
+    ];
+  }
+  return ['match', ['get', 'trajectory'],
+    'stayed_high', TRAJECTORY_CONFIG.stayed_high.color,
+    'stayed_low',  TRAJECTORY_CONFIG.stayed_low.color,
+    'improved',    TRAJECTORY_CONFIG.improved.color,
+    'declined',    TRAJECTORY_CONFIG.declined.color,
+    TRAJECTORY_CONFIG.no_data.color,
   ];
-  const pairs = Object.entries(BIVARIATE_COLORS).flatMap(([k, v]) => [k, v]);
-  return ['match', key, ...pairs, '#e0e0e0'];
 }
 
-function getFillColorExpr(layer: LayerMode) {
+function getFillColorExpr(layer: LayerMode, spotlight: Trajectory | null = null) {
   if (layer === 'kei') return keiColorExpr();
   if (layer === 'ela') return elaColorExpr();
-  return trajColorExpr();
+  return trajColorExpr(spotlight);
 }
 
-export default function MapView({ activeLayer, onDistrictClick, selectedDistrict }: Props) {
+export default function MapView({ activeLayer, onDistrictClick, selectedDistrict, spotlightCategory }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   const activeLayerRef = useRef(activeLayer);
   const selectedDistrictRef = useRef(selectedDistrict);
+  const spotlightCategoryRef = useRef(spotlightCategory);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const hoveredIdRef = useRef<string | null>(null);
 
   // Keep refs current without re-creating the map
   useEffect(() => { activeLayerRef.current = activeLayer; }, [activeLayer]);
   useEffect(() => { selectedDistrictRef.current = selectedDistrict; }, [selectedDistrict]);
+  useEffect(() => { spotlightCategoryRef.current = spotlightCategory; }, [spotlightCategory]);
 
-  // ── Update fill color when layer switches ──────────────────────────────────
+  // ── Update fill color when layer or spotlight changes ─────────────────────
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.getLayer(FILL_LAYER)) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    map.setPaintProperty(FILL_LAYER, 'fill-color', getFillColorExpr(activeLayer) as any);
-  }, [activeLayer]);
+    map.setPaintProperty(FILL_LAYER, 'fill-color', getFillColorExpr(activeLayer, spotlightCategory) as any);
+  }, [activeLayer, spotlightCategory]);
 
   // ── Update stroke when selected district changes ───────────────────────────
   useEffect(() => {
@@ -146,7 +154,7 @@ export default function MapView({ activeLayer, onDistrictClick, selectedDistrict
           source: SOURCE_ID,
           paint: {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            'fill-color': getFillColorExpr(activeLayerRef.current) as any,
+            'fill-color': getFillColorExpr(activeLayerRef.current, spotlightCategoryRef.current) as any,
             'fill-opacity': ['case',
               ['boolean', ['feature-state', 'hover'], false], 0.9,
               0.75,
@@ -235,7 +243,6 @@ export default function MapView({ activeLayer, onDistrictClick, selectedDistrict
         }}
       />
 
-      <Legend activeLayer={activeLayer} />
     </div>
   );
 }
