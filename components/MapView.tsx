@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { LayerMode, DistrictProperties, TRAJECTORY_CONFIG, KEI_STOPS, ELA_STOPS } from '@/lib/types';
+import { LayerMode, DistrictProperties, BIVARIATE_COLORS, KEI_STOPS, ELA_STOPS } from '@/lib/types';
 import Legend from './Legend';
 
 interface Props {
@@ -45,14 +45,13 @@ function elaColorExpr() {
 }
 
 function trajColorExpr() {
-  return [
-    'match', ['get', 'trajectory'],
-    'stayed_high', TRAJECTORY_CONFIG.stayed_high.color,
-    'stayed_low',  TRAJECTORY_CONFIG.stayed_low.color,
-    'improved',    TRAJECTORY_CONFIG.improved.color,
-    'declined',    TRAJECTORY_CONFIG.declined.color,
-    TRAJECTORY_CONFIG.no_data.color,
+  const key = ['concat',
+    ['to-string', ['get', 'kei_quartile']],
+    '_',
+    ['to-string', ['get', 'ela_quartile']],
   ];
+  const pairs = Object.entries(BIVARIATE_COLORS).flatMap(([k, v]) => [k, v]);
+  return ['match', key, ...pairs, '#e0e0e0'];
 }
 
 function getFillColorExpr(layer: LayerMode) {

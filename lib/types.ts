@@ -30,25 +30,25 @@ export const TRAJECTORY_CONFIG: Record<
   { color: string; label: string; description: string }
 > = {
   stayed_high: {
-    color: '#1A5276',
+    color: '#2e7d32',
     label: 'Consistently Strong',
     description:
       'Students in this district entered kindergarten on track and maintained high ELA performance through 3rd grade.',
   },
   stayed_low: {
-    color: '#C0392B',
+    color: '#d62c1a',
     label: 'Consistently Struggling',
     description:
       "This district's students entered kindergarten at risk and continued to struggle through 3rd grade ELA.",
   },
   improved: {
-    color: '#27AE60',
+    color: '#1565c0',
     label: 'Beat the Odds',
     description:
       'Despite a challenging start at kindergarten entry, students in this district made remarkable progress by 3rd grade.',
   },
   declined: {
-    color: '#F39C12',
+    color: '#f0c419',
     label: 'Fell Behind',
     description:
       'Though students entered kindergarten on track, 3rd grade ELA outcomes fell below expectations.',
@@ -58,6 +58,18 @@ export const TRAJECTORY_CONFIG: Record<
     label: 'Insufficient Data',
     description: 'One or both metrics are unavailable for this district.',
   },
+};
+
+// Bivariate color matrix: key = "${kei_quartile}_${ela_quartile}"
+// kei_q 1 = lowest need (best start), 4 = highest need (hardest start)
+// ela_q 1 = lowest performance (worst end), 4 = highest performance (best end)
+// Four corners: declined (amber), stayed_high (green), stayed_low (red), improved (blue)
+// Interior cells bilinearly interpolated between the four corners.
+export const BIVARIATE_COLORS: Record<string, string> = {
+  '1_1': '#f0c419', '1_2': '#afac21', '1_3': '#6f952a', '1_4': '#2e7d32',
+  '2_1': '#e79119', '2_2': '#a78831', '2_3': '#667e49', '2_4': '#267561',
+  '3_1': '#df5f1a', '3_2': '#9e6341', '3_3': '#5e6869', '3_4': '#1d6d91',
+  '4_1': '#d62c1a', '4_2': '#963f51', '4_3': '#555289', '4_4': '#1565c0',
 };
 
 export const KEI_STOPS: Array<{ value: number; color: string; label: string }> = [
