@@ -15,7 +15,7 @@ export default function Legend({ activeLayer, spotlightCategory, onSpotlightChan
   return (
     <div
       className="absolute bottom-8 left-3 z-10 rounded-xl shadow-lg p-3 text-xs"
-      style={{ background: 'rgba(255,255,255,0.95)', minWidth: 180, maxWidth: 220 }}
+      style={{ background: 'rgba(255,255,255,0.95)', width: 220 }}
     >
       {activeLayer === 'kei' && (
         <>
@@ -72,86 +72,93 @@ export default function Legend({ activeLayer, spotlightCategory, onSpotlightChan
             KEI 2020–21 → ELA 2024–25
           </p>
 
-          {/* Diamond spotlight layout: stayed_high top, improved left, declined right, stayed_low bottom */}
+          {/* 4-diamond SVG: each category is a diamond polygon, all 4 share one center point
+              Geometry (cx=110, cy=100, r=32):
+                Top outer (110,36) | Left outer (46,100) | Right outer (174,100) | Bottom outer (110,164)
+                Shared corners: TL(78,68) TR(142,68) BL(78,132) BR(142,132) | Center (110,100)
+          */}
           {(() => {
-            const DIAMOND: Array<{ key: Trajectory; pos: React.CSSProperties }> = [
-              { key: 'stayed_high', pos: { top: 0,   left: '50%', transform: 'translateX(-50%)' } },
-              { key: 'improved',   pos: { top: '50%', left: 0,    transform: 'translateY(-50%)' } },
-              { key: 'declined',   pos: { top: '50%', right: 0,   transform: 'translateY(-50%)' } },
-              { key: 'stayed_low', pos: { bottom: 0, left: '50%', transform: 'translateX(-50%)' } },
+            const PANELS: Array<{
+              key: Trajectory;
+              points: string;
+              labelLines: string[];
+              lx: number; ly: number; anchor: string;
+            }> = [
+              {
+                key: 'stayed_high',
+                points: '110,36 78,68 110,100 142,68',
+                labelLines: ['Consistently', 'Strong'],
+                lx: 110, ly: 22, anchor: 'middle',
+              },
+              {
+                key: 'improved',
+                points: '78,68 46,100 78,132 110,100',
+                labelLines: ['Beat the', 'Odds'],
+                lx: 42, ly: 95, anchor: 'end',
+              },
+              {
+                key: 'declined',
+                points: '142,68 174,100 142,132 110,100',
+                labelLines: ['Fell', 'Behind'],
+                lx: 178, ly: 95, anchor: 'start',
+              },
+              {
+                key: 'stayed_low',
+                points: '110,100 78,132 110,164 142,132',
+                labelLines: ['Consistently', 'Struggling'],
+                lx: 110, ly: 172, anchor: 'middle',
+              },
             ];
-            const BTN_W = 62;
-            const BTN_H = 54;
             return (
-              <div style={{ position: 'relative', height: 148, marginBottom: 8 }}>
-                {/* Diamond connector lines */}
-                <svg
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
-                  viewBox="0 0 180 148"
-                  preserveAspectRatio="none"
-                >
-                  {/* top-left, top-right, bottom-left, bottom-right diagonals */}
-                  <line x1="90" y1="27" x2="31"  y2="74" stroke="#ddd" strokeWidth="1.5" />
-                  <line x1="90" y1="27" x2="149" y2="74" stroke="#ddd" strokeWidth="1.5" />
-                  <line x1="31"  y1="74" x2="90" y2="121" stroke="#ddd" strokeWidth="1.5" />
-                  <line x1="149" y1="74" x2="90" y2="121" stroke="#ddd" strokeWidth="1.5" />
-                </svg>
-
-                {DIAMOND.map(({ key, pos }) => {
+              <svg
+                viewBox="0 0 220 200"
+                style={{ width: '100%', height: 'auto', display: 'block', marginBottom: 6 }}
+                aria-label="Cohort trajectory spotlight legend"
+              >
+                {PANELS.map(({ key, points, labelLines, lx, ly, anchor }) => {
                   const cfg = TRAJECTORY_CONFIG[key];
                   const isActive = spotlightCategory === key;
                   const isDimmed = spotlightCategory !== null && !isActive;
                   return (
-                    <button
-                      key={key}
-                      onClick={() => onSpotlightChange(isActive ? null : key)}
-                      title={isActive ? 'Click to clear filter' : `Show only: ${cfg.label}`}
-                      style={{
-                        position: 'absolute',
-                        ...pos,
-                        width: BTN_W,
-                        height: BTN_H,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 3,
-                        borderRadius: 8,
-                        border: `2px solid ${isActive ? cfg.color : 'transparent'}`,
-                        background: isActive ? `${cfg.color}1a` : '#f4f4f4',
-                        opacity: isDimmed ? 0.35 : 1,
-                        cursor: 'pointer',
-                        transition: 'opacity 0.15s, border-color 0.15s',
-                        padding: '5px 4px',
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: 'block',
-                          width: 20,
-                          height: 20,
-                          borderRadius: 4,
-                          background: cfg.color,
-                          flexShrink: 0,
-                          boxShadow: isActive ? `0 0 0 2px ${cfg.color}55` : 'none',
-                        }}
+                    <g key={key} style={{ cursor: 'pointer' }} onClick={() => onSpotlightChange(isActive ? null : key)}>
+                      <polygon
+                        points={points}
+                        fill={cfg.color}
+                        stroke="white"
+                        strokeWidth="2"
+                        opacity={isDimmed ? 0.3 : 1}
+                        style={{ transition: 'opacity 0.15s' }}
                       />
-                      <span
-                        style={{
-                          fontSize: 8.5,
-                          fontWeight: 600,
-                          textAlign: 'center',
-                          color: '#1a3a2a',
-                          lineHeight: 1.2,
-                          fontFamily: 'var(--font-nunito)',
-                        }}
+                      {/* Active ring */}
+                      {isActive && (
+                        <polygon
+                          points={points}
+                          fill="none"
+                          stroke={cfg.color}
+                          strokeWidth="3"
+                          strokeOpacity="0.5"
+                          style={{ transform: 'scale(1.04)', transformOrigin: '110px 100px' }}
+                        />
+                      )}
+                      <text
+                        x={lx}
+                        y={ly}
+                        textAnchor={anchor as React.SVGAttributes<SVGTextElement>['textAnchor']}
+                        fontSize="8"
+                        fontWeight="600"
+                        fill="#1a3a2a"
+                        fontFamily="var(--font-nunito)"
+                        opacity={isDimmed ? 0.4 : 1}
+                        style={{ transition: 'opacity 0.15s' }}
                       >
-                        {cfg.label}
-                      </span>
-                    </button>
+                        {labelLines.map((line, i) => (
+                          <tspan key={i} x={lx} dy={i === 0 ? 0 : 11}>{line}</tspan>
+                        ))}
+                      </text>
+                    </g>
                   );
                 })}
-              </div>
+              </svg>
             );
           })()}
 

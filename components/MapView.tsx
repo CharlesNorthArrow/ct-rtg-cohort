@@ -110,16 +110,16 @@ export default function MapView({ activeLayer, onDistrictClick, selectedDistrict
   function lineColorExpr(sel: string | null) {
     return ['case',
       ['==', ['get', 'district_name'], sel ?? '__none__'], '#2E7D32',
-      ['boolean', ['feature-state', 'hover'], false], '#222',
-      '#888',
+      ['boolean', ['feature-state', 'hover'], false], '#555',
+      '#c0c0c0',
     ];
   }
 
   function lineWidthExpr(sel: string | null) {
     return ['case',
       ['==', ['get', 'district_name'], sel ?? '__none__'], 2.5,
-      ['boolean', ['feature-state', 'hover'], false], 2,
-      0.8,
+      ['boolean', ['feature-state', 'hover'], false], 1.5,
+      0.5,
     ];
   }
 
