@@ -182,6 +182,17 @@ if (fs.existsSync(RAW_SHAPES)) {
 const keiValues = Object.values(keiByDistrict).map((d) => d.li_pct1);
 const elaValues = Object.values(elaByDistrict).map((d) => d.ela_performance_index);
 
+// Ranks — stored directly on each data object so the join can pick them up.
+// KEI rank 1 = fewest students needing support (lowest LI_PCT1 = best outcome).
+const keiSortedForRank = Object.values(keiByDistrict).sort((a, b) => a.li_pct1 - b.li_pct1);
+keiSortedForRank.forEach((d, i) => { d.kei_rank = i + 1; });
+const keiTotal = keiSortedForRank.length;
+
+// ELA rank 1 = highest performance index (best outcome).
+const elaSortedForRank = Object.values(elaByDistrict).sort((a, b) => b.ela_performance_index - a.ela_performance_index);
+elaSortedForRank.forEach((d, i) => { d.ela_rank = i + 1; });
+const elaTotal = elaSortedForRank.length;
+
 function keiQuartile(li_pct1) {
   // Raw quartile of li_pct1 (Q4 = highest = worst). Invert so Q1 = best.
   const rawQ = quartile(keiValues, li_pct1);
@@ -272,6 +283,8 @@ const outputFeatures = shapes.features.map((feature) => {
       // KEI
       kei_li_pct1: kei?.li_pct1 ?? null,
       kei_quartile: keiQ,
+      kei_rank: kei?.kei_rank ?? null,
+      kei_total: kei ? keiTotal : null,
       kei_year: kei ? '2020-21' : null,
 
       // ELA
@@ -280,6 +293,8 @@ const outputFeatures = shapes.features.map((feature) => {
       ela_growth_rate: ela?.ela_growth_rate ?? null,
       ela_participation_rate: ela?.ela_participation_rate ?? null,
       ela_quartile: elaQ,
+      ela_rank: ela?.ela_rank ?? null,
+      ela_total: ela ? elaTotal : null,
       ela_year: ela ? '2024-25' : null,
 
       // Bivariate

@@ -13,6 +13,14 @@ const QUARTILE_LABELS: Record<number, string> = {
   1: 'Q1', 2: 'Q2', 3: 'Q3', 4: 'Q4',
 };
 
+// Returns white or dark text depending on background luminance
+function contrastText(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55 ? '#1a3a2a' : '#ffffff';
+}
+
 function QuartileBadge({ q, invert }: { q: number | null; invert?: boolean }) {
   if (q == null) return <span className="text-gray-400 text-xs">—</span>;
   // For KEI: Q1 = best (invert=true). For ELA: Q4 = best (invert=false).
@@ -32,12 +40,10 @@ function QuartileBadge({ q, invert }: { q: number | null; invert?: boolean }) {
 export default function Sidebar({ district, activeLayer, onClose }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  // Focus the close button when sidebar opens
   useEffect(() => {
     if (district) closeRef.current?.focus();
   }, [district]);
 
-  // ESC to close
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handler);
@@ -84,7 +90,49 @@ export default function Sidebar({ district, activeLayer, onClose }: Props) {
           </div>
 
           <div className="p-4 flex flex-col gap-4">
-            {/* KEI Section */}
+
+            {/* ── Trajectory — colored card at top ── */}
+            {traj && (
+              <div
+                style={{
+                  background: traj.color,
+                  color: contrastText(traj.color),
+                  borderRadius: 10,
+                  padding: '12px 14px',
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 700,
+                    letterSpacing: 1,
+                    opacity: 0.7,
+                    margin: '0 0 3px',
+                    fontFamily: 'var(--font-nunito)',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Cohort Trajectory
+                </p>
+                <p
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 800,
+                    margin: '0 0 6px',
+                    fontFamily: 'var(--font-nunito)',
+                  }}
+                >
+                  {traj.label}
+                </p>
+                <p style={{ fontSize: 11, lineHeight: 1.5, margin: 0, opacity: 0.88 }}>
+                  {traj.description}
+                </p>
+              </div>
+            )}
+
+            <hr style={{ borderColor: '#e0ece4' }} />
+
+            {/* ── KEI ── */}
             <section>
               <h3
                 className="text-xs font-bold uppercase tracking-wide mb-2"
@@ -101,7 +149,7 @@ export default function Sidebar({ district, activeLayer, onClose }: Props) {
                     of entering students needed additional literacy support
                   </p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-gray-500">Quartile rank:</span>
+                    <span className="text-xs text-gray-500">Quartile:</span>
                     <QuartileBadge q={district.kei_quartile} invert />
                     <span className="text-xs text-gray-400">
                       {district.kei_quartile === 1 && '(highest need)'}
@@ -110,6 +158,12 @@ export default function Sidebar({ district, activeLayer, onClose }: Props) {
                       {district.kei_quartile === 4 && '(lowest need)'}
                     </span>
                   </div>
+                  {district.kei_rank != null && district.kei_total != null && (
+                    <p className="text-xs" style={{ color: '#888', marginTop: 2 }}>
+                      Ranked #{district.kei_rank} of {district.kei_total} districts
+                      <span style={{ opacity: 0.7 }}> (rank 1 = fewest needing support)</span>
+                    </p>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-gray-400 italic">Data not available</p>
@@ -118,7 +172,7 @@ export default function Sidebar({ district, activeLayer, onClose }: Props) {
 
             <hr style={{ borderColor: '#e0ece4' }} />
 
-            {/* ELA Section */}
+            {/* ── ELA ── */}
             <section>
               <h3
                 className="text-xs font-bold uppercase tracking-wide mb-2"
@@ -150,7 +204,7 @@ export default function Sidebar({ district, activeLayer, onClose }: Props) {
                     </p>
                   )}
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-gray-500">Quartile rank:</span>
+                    <span className="text-xs text-gray-500">Quartile:</span>
                     <QuartileBadge q={district.ela_quartile} />
                     <span className="text-xs text-gray-400">
                       {district.ela_quartile === 4 && '(top performer)'}
@@ -159,42 +213,18 @@ export default function Sidebar({ district, activeLayer, onClose }: Props) {
                       {district.ela_quartile === 1 && '(lowest performance)'}
                     </span>
                   </div>
+                  {district.ela_rank != null && district.ela_total != null && (
+                    <p className="text-xs" style={{ color: '#888', marginTop: 2 }}>
+                      Ranked #{district.ela_rank} of {district.ela_total} districts
+                      <span style={{ opacity: 0.7 }}> (rank 1 = highest performance)</span>
+                    </p>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-gray-400 italic">Data not available</p>
               )}
             </section>
 
-            <hr style={{ borderColor: '#e0ece4' }} />
-
-            {/* Trajectory Section */}
-            <section>
-              <h3
-                className="text-xs font-bold uppercase tracking-wide mb-2"
-                style={{ color: '#555' }}
-              >
-                Cohort Trajectory
-              </h3>
-              {traj && (
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="inline-block w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ background: traj.color }}
-                    />
-                    <span
-                      className="font-bold text-sm"
-                      style={{ color: traj.color, fontFamily: 'var(--font-nunito)' }}
-                    >
-                      {traj.label}
-                    </span>
-                  </div>
-                  <p className="text-sm" style={{ color: '#3a5a4a', lineHeight: 1.5 }}>
-                    {traj.description}
-                  </p>
-                </div>
-              )}
-            </section>
           </div>
         </>
       )}

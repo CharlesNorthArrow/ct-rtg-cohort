@@ -13,6 +13,8 @@ export interface DistrictProperties {
 
   kei_li_pct1: number | null;
   kei_quartile: number | null;
+  kei_rank: number | null;
+  kei_total: number | null;
   kei_year: string | null;
 
   ela_performance_index: number | null;
@@ -20,6 +22,8 @@ export interface DistrictProperties {
   ela_growth_rate: number | null;
   ela_participation_rate: number | null;
   ela_quartile: number | null;
+  ela_rank: number | null;
+  ela_total: number | null;
   ela_year: string | null;
 
   trajectory: Trajectory;
