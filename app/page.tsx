@@ -8,13 +8,15 @@ import Sidebar from '@/components/Sidebar';
 import Legend from '@/components/Legend';
 import DownloadButton from '@/components/DownloadButton';
 
-// MapView uses browser APIs — load client-side only
+// MapView and SplitMapView use browser APIs — load client-side only
 const MapView = dynamic(() => import('@/components/MapView'), { ssr: false });
+const SplitMapView = dynamic(() => import('@/components/SplitMapView'), { ssr: false });
 
 export default function HomePage() {
   const [activeLayer, setActiveLayer] = useState<LayerMode>('trajectory');
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictProperties | null>(null);
   const [spotlightCategory, setSpotlightCategory] = useState<Trajectory | null>(null);
+  const [splitView, setSplitView] = useState(false);
 
   const handleDistrictClick = useCallback((props: DistrictProperties | null) => {
     setSelectedDistrict(props);
@@ -23,6 +25,7 @@ export default function HomePage() {
   const handleLayerChange = useCallback((layer: LayerMode) => {
     setActiveLayer(layer);
     setSpotlightCategory(null);
+    setSplitView(false);
   }, []);
 
   return (
@@ -37,10 +40,13 @@ export default function HomePage() {
           spotlightCategory={spotlightCategory}
         />
 
+        {splitView && <SplitMapView onClose={() => setSplitView(false)} />}
+
         <Legend
           activeLayer={activeLayer}
           spotlightCategory={spotlightCategory}
           onSpotlightChange={setSpotlightCategory}
+          onSplitView={() => setSplitView(true)}
         />
 
         <Sidebar

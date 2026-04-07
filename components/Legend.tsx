@@ -9,9 +9,10 @@ interface Props {
   activeLayer: LayerMode;
   spotlightCategory: Trajectory | null;
   onSpotlightChange: (cat: Trajectory | null) => void;
+  onSplitView: () => void;
 }
 
-export default function Legend({ activeLayer, spotlightCategory, onSpotlightChange }: Props) {
+export default function Legend({ activeLayer, spotlightCategory, onSpotlightChange, onSplitView }: Props) {
   return (
     <div
       className="absolute bottom-8 left-3 z-10 rounded-xl shadow-lg p-3 text-xs"
@@ -152,6 +153,24 @@ export default function Legend({ activeLayer, spotlightCategory, onSpotlightChan
               Clear filter
             </button>
           )}
+
+          <button
+            onClick={onSplitView}
+            style={{
+              marginTop: 6,
+              width: '100%',
+              fontSize: 9,
+              color: '#fff',
+              background: '#2a4a3a',
+              border: 'none',
+              borderRadius: 5,
+              padding: '4px 0',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-nunito)',
+            }}
+          >
+            Compare all side by side →
+          </button>
         </>
       )}
     </div>
