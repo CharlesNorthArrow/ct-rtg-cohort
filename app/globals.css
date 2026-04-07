@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --color-rtg-green: #2E7D32;
+  --color-rtg-green-light: #8BC34A;
+  --color-rtg-yellow: #FFF176;
+  --color-rtg-orange: #FF8A65;
+  --color-rtg-red: #C62828;
+  --color-rtg-navy: #1A5276;
+  --color-rtg-amber: #F39C12;
+  --font-heading: "Nunito", sans-serif;
+  --font-body: "Open Sans", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-heading);
+}
+
+/* Mapbox overrides */
+.mapboxgl-ctrl-logo { display: none !important; }
+.mapboxgl-ctrl-attrib { display: none !important; }
