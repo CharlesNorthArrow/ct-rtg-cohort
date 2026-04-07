@@ -30,25 +30,25 @@ export const TRAJECTORY_CONFIG: Record<
   { color: string; label: string; description: string }
 > = {
   stayed_high: {
-    color: '#283593',
+    color: '#1976D2',
     label: 'Consistently Strong',
     description:
       'Students in this district entered kindergarten on track and maintained high ELA performance through 3rd grade.',
   },
   stayed_low: {
-    color: '#B71C1C',
+    color: '#D32F2F',
     label: 'Consistently Struggling',
     description:
       "This district's students entered kindergarten at risk and continued to struggle through 3rd grade ELA.",
   },
   improved: {
-    color: '#00695C',
+    color: '#2E7D32',
     label: 'Beat the Odds',
     description:
       'Despite a challenging start at kindergarten entry, students in this district made remarkable progress by 3rd grade.',
   },
   declined: {
-    color: '#E65100',
+    color: '#F9A825',
     label: 'Fell Behind',
     description:
       'Though students entered kindergarten on track, 3rd grade ELA outcomes fell below expectations.',

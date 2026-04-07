@@ -104,10 +104,10 @@ export default function Sidebar({ district, activeLayer, onClose }: Props) {
                     <span className="text-xs text-gray-500">Quartile rank:</span>
                     <QuartileBadge q={district.kei_quartile} invert />
                     <span className="text-xs text-gray-400">
-                      {district.kei_quartile === 4 && '(highest need)'}
-                      {district.kei_quartile === 3 && '(above avg need)'}
-                      {district.kei_quartile === 2 && '(below avg need)'}
-                      {district.kei_quartile === 1 && '(lowest need)'}
+                      {district.kei_quartile === 1 && '(highest need)'}
+                      {district.kei_quartile === 2 && '(above avg need)'}
+                      {district.kei_quartile === 3 && '(low need)'}
+                      {district.kei_quartile === 4 && '(lowest need)'}
                     </span>
                   </div>
                 </div>

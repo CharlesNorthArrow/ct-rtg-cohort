@@ -66,6 +66,15 @@ function getFillColorExpr(layer: LayerMode, spotlight: Trajectory | null = null)
   return trajColorExpr(spotlight);
 }
 
+// Trajectory uses fully opaque fills so category colors are pure flat hues with no
+// blending against the base map. Choropleth layers keep semi-transparent fills so
+// roads and features show through.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getFillOpacityExpr(layer: LayerMode): any {
+  if (layer === 'trajectory') return 1.0;
+  return ['case', ['boolean', ['feature-state', 'hover'], false], 0.9, 0.75];
+}
+
 export default function MapView({ activeLayer, onDistrictClick, selectedDistrict, spotlightCategory }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,12 +90,13 @@ export default function MapView({ activeLayer, onDistrictClick, selectedDistrict
   useEffect(() => { selectedDistrictRef.current = selectedDistrict; }, [selectedDistrict]);
   useEffect(() => { spotlightCategoryRef.current = spotlightCategory; }, [spotlightCategory]);
 
-  // ── Update fill color when layer or spotlight changes ─────────────────────
+  // ── Update fill color + opacity when layer or spotlight changes ───────────
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.getLayer(FILL_LAYER)) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     map.setPaintProperty(FILL_LAYER, 'fill-color', getFillColorExpr(activeLayer, spotlightCategory) as any);
+    map.setPaintProperty(FILL_LAYER, 'fill-opacity', getFillOpacityExpr(activeLayer));
   }, [activeLayer, spotlightCategory]);
 
   // ── Update stroke when selected district changes ───────────────────────────
@@ -155,10 +165,7 @@ export default function MapView({ activeLayer, onDistrictClick, selectedDistrict
           paint: {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             'fill-color': getFillColorExpr(activeLayerRef.current, spotlightCategoryRef.current) as any,
-            'fill-opacity': ['case',
-              ['boolean', ['feature-state', 'hover'], false], 0.9,
-              0.75,
-            ],
+            'fill-opacity': getFillOpacityExpr(activeLayerRef.current),
           },
         });
 
